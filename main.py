@@ -57,9 +57,8 @@ while continua:
     # Impressão da MP
     main_memory.imprime()
 
-    
     # -- Menu de seleção de opção -- #
-    Menu() # Chama a função para a impressão das opções
+    #Menu() # Chama a função para a impressão das opções
     opcao = int(input("Opcao: "))
     
     # --- Opção 1 --- #

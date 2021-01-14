@@ -14,9 +14,11 @@ class MP:
             value = random.randint(0,255)
             self.memory.append(hex(value))
 
+    # --- Funções secundarias --- #
     # -- Retorna em qual bloco determinado endereço está contido -- #   
     def blockNumber(self, endereco):
-        bloco = endereco / self.tamanho_bloco
+        bloco = endereco // self.tamanho_bloco
+
         return bloco
 
     # -- Retorna qual o primeiro e ultimo endereço de determinado bloco -- #
@@ -38,6 +40,7 @@ class MP:
 
         return inicio,final
 
+    # --- Funções principais --- #
     # -- Imprime a MP -- #
     def imprime(self):
         quantidade_de_colunas = 5 # Quantidade de colunas a serem imprimidas
@@ -117,5 +120,9 @@ class MP:
 
     # -- Le um bloco da MP -- #
     def read(self, endereco):
+        # Altera o tipo da entrada para acessar a lista
+        if "0b" in str(endereco):
+            endereco = int(endereco,0)
+        
         inicio,final = self.dimensoesDoBloco(self.blockNumber(endereco))
         return self.memory[inicio:final]
