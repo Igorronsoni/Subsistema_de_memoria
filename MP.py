@@ -124,4 +124,5 @@ class MP:
             endereco = int(endereco,0)
         numeroBloco = self.blockNumber(endereco)
         inicio,final = self.dimensoesDoBloco(numeroBloco)
+
         return numeroBloco, self.memory[inicio:final].copy()

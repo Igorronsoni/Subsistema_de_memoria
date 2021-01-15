@@ -142,6 +142,7 @@ class Cache:
 
     # -- Responsavel pela leitura da cache -- #  
     def read(self, endereco):
+        
         # Transforma em binario se for decimal
         if not '0b' in endereco:
             # Caso for um decimal faz a transformação para binario
@@ -152,7 +153,7 @@ class Cache:
                 valor = endereco[2:]
                 zeros = '0' * (7 - len(valor))
                 endereco = '0b' + zeros + valor
-
+    
         rotulo = '0b' + str(int(str(endereco)[2:5])) # Pega qual o rotulo 
         conjunto = int('0b' + str(endereco)[5:7],0) # Pega o conjunto destinado
         deslocamento = int('0b' + str(endereco)[7:],0) # Deslocamento dentro do quadro
@@ -164,14 +165,14 @@ class Cache:
         for quadro in self.cache[conjunto]:
 
             # Verifica se o endereço fornecido esta no conjunto 
-            if quadro.tag == rotulo:
+            if str(quadro.tag) == rotulo:
                 codigo = '1' + codigo
             else:
                 codigo = '0' + codigo
         
         # Verifica o bloco e o numero de onde o endereço esta na MP
         numeroBloco, bloco = self.MP.read(endereco)
-        
+
         # Decodifica o codigo gerado na pesquisa
         index = self.decodificador(codigo)
         if index != -1: # Se o index for diferente de -1 então temos um indice de lista
@@ -179,9 +180,10 @@ class Cache:
             # Verifica se o quadro é valido dentro da cache
             if self.cache[conjunto][index].valid:
                 self.atualizaLRU(conjunto,index) #Atualiza os contadores
-                self.estatisticasRead['hit'] += 1 # Atualiza o valor de hits
                 
-                return 'hit', numeroBloco, conjunto, index, deslocamento 
+                lista = self.cache[conjunto][index].read()
+
+                return 'hit', numeroBloco, conjunto, index, deslocamento, lista[2][deslocamento]
             # Se não for, então deve-se procurar na MP o endereço para pegar o valor atual da posição 
     
         # Verifica qual das duas linhas deve sair 
@@ -203,9 +205,25 @@ class Cache:
         # Caso não esteja na cache ou o bit de validade for false, insere o quadro na cache
         self.inserirBloco(bloco, conjunto, rotulo, indice_a_ser_substituido)
         self.atualizaLRU(conjunto,index) # Atualiza os contadores
-        self.estatisticasRead['miss'] += 1 # Atualiza o valor de miss
         
-        return 'miss', numeroBloco, conjunto, index, deslocamento  
+        return 'miss', numeroBloco, conjunto, index, deslocamento , bloco[deslocamento]
 
-    def write(self):
-        pass    
+    def write(self, endereco, valor):
+        copia_endereco = endereco
+        # Pega as partes do endereço
+        if not '0b' in copia_endereco:
+            # Caso for um decimal faz a transformação para binario
+            copia_endereco = bin(int(copia_endereco,0))
+            
+            # Verifica se o binario possui 7 bits
+            if len(str(copia_endereco)) < 9:
+                valor = copia_endereco[2:]
+                zeros = '0' * (7 - len(valor))
+                copia_endereco = '0b' + zeros + valor
+
+        rotulo = '0b' + str(int(str(copia_endereco)[2:5])) # Pega qual o rotulo 
+        conjunto = int('0b' + str(copia_endereco)[5:7],0) # Pega o conjunto destinado
+        deslocamento = int('0b' + str(copia_endereco)[7:],0) # Deslocamento dentro do quadro 
+
+
+         

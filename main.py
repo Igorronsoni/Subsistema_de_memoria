@@ -58,8 +58,8 @@ def saida(tupla):
     
     # Altera o tamanho da string para dar certo na impressao
     blocoMP = str(bin(tupla[1]))
-    if len(blocoMP) < 9:
-        blocoMP = '0b' + ('0' * (7 - len(blocoMP[2:]))) + blocoMP[2:]
+    if len(blocoMP) < 7:
+        blocoMP = '0b' + ('0' * (5 - len(blocoMP[2:]))) + blocoMP[2:]
 
     # Altera o tamanho do conjunto
     conjunto = str(bin(tupla[2]))
@@ -71,18 +71,22 @@ def saida(tupla):
     if len(deslocamento) < 4:
         deslocamento = '0b' + '0' + deslocamento[2:]
 
-
-    print("\n+----------------------------------------------------------------+")   
-    print("|                   Retorno da Leitura da Cache                  |")
-    print("+----------------------------------------------------------------+")
-    print('| Estava na Cache | Bloco MP  | Conjunto | Quadro | Deslocamento |')
-    print('+-----------------+-----------+----------+--------+--------------+')
-    print('|       {}       | {} |   {}   |  {}   |     {}     |'.format(inCache, blocoMP,conjunto, bin(tupla[3]),deslocamento))
-    print('+-----------------+-----------+----------+--------+--------------+')
+    # Altera tamanho do valor
+    valor = str(tupla[5])
+    if len(valor) % 2 != 0:
+        valor = ' ' + valor
+    
+    print("\n+------------------------------------------------------------------------+")   
+    print("|                       Retorno da Leitura da Cache                      |")
+    print("+------------------------------------------------------------------------+")
+    print('| Estava na Cache | Bloco MP  | Conjunto | Quadro | Deslocamento | Valor |')
+    print('+-----------------+-----------+----------+--------+--------------+-------+')
+    print('|       {}       |  {}  |   {}   |  {}   |     {}     | {}  |'.format(inCache, blocoMP,conjunto, bin(tupla[3]),deslocamento,valor))
+    print('+-----------------+-----------+----------+--------+--------------+-------+')
 
 # -- Variáveis de controle -- #
 continua = True             # Controle de loop, True => mantendo a aplicação rodando
-valor_maximo = '0b' + ('1' * tamanho_celula)
+valor_maximo = '0b' + ('1' * tamanho_celula)  # Transforma o valor maximo em binario
 
 # -- Inicia classes -- #
 main_memory = MP(celulas_MP, tamanho_bloco, valor_maximo)
@@ -105,7 +109,10 @@ while continua:
         print("OBS: O endereco pode ser escrito em binario ou decimal.\nCaso opte por binario, e necessario adicionar '0b' a frente do endereco")
         endereco = input("Digite um endereço entre 0 e 127 (0b0000000 - 0b1111111): ")
         tupla_de_retorno  = cache.read(endereco)
-        saida(tupla_de_retorno)
+
+        cache.estatisticasRead[tupla_de_retorno[0]] += 1 # Atualiza o valor da estatistica
+
+        saida(tupla_de_retorno) # Printa valores
 
     # --- Opção 2 --- #
     # -- Escrever em um determinado endereço de memória -- #
@@ -114,7 +121,9 @@ while continua:
         endereco = input("Digite um endereço entre 0 e 127 (0b0000000 - 0b1111111): ")
         print("\nOBS: O valor pode ser escrito em hexadecimal ou decimal.\nCaso opte por hexadecimal, e necessario adicionar '0x' a frente do valor")
         valor =  input("Digite um valor entre 0 e 255 (0x00 - 0xFF): ")
-
+        
+        cache.write(endereco,valor)
+    
     # -- Opção 3 -- #
     # -- Apresenta as estatísticas de acertos e faltas (absolutos e percentuais) para as três situações: leitura, escrita e geral -- #
     elif opcao == 3:
