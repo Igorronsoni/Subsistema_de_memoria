@@ -102,15 +102,18 @@ while continua:
     # --- Opção 1 --- #
     # -- Ler o conteudo de um endereço da memoria especifico -- #
     if opcao == 1:
-        print("OBS: O endereco pode ser escrito em binario ou decimal.\nCaso opte por binario, é necessario adicionar '0b' a frente do endereco")
+        print("OBS: O endereco pode ser escrito em binario ou decimal.\nCaso opte por binario, e necessario adicionar '0b' a frente do endereco")
         endereco = input("Digite um endereço entre 0 e 127 (0b0000000 - 0b1111111): ")
         tupla_de_retorno  = cache.read(endereco)
         saida(tupla_de_retorno)
-        
+
     # --- Opção 2 --- #
     # -- Escrever em um determinado endereço de memória -- #
     elif opcao == 2:
-        break
+        print("OBS: O endereco pode ser escrito em binario ou decimal.\nCaso opte por binario, e necessario adicionar '0b' a frente do endereco")
+        endereco = input("Digite um endereço entre 0 e 127 (0b0000000 - 0b1111111): ")
+        print("\nOBS: O valor pode ser escrito em hexadecimal ou decimal.\nCaso opte por hexadecimal, e necessario adicionar '0x' a frente do valor")
+        valor =  input("Digite um valor entre 0 e 255 (0x00 - 0xFF): ")
 
     # -- Opção 3 -- #
     # -- Apresenta as estatísticas de acertos e faltas (absolutos e percentuais) para as três situações: leitura, escrita e geral -- #

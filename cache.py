@@ -37,6 +37,9 @@ class Cache:
         self.cache = list() # Inicia matriz da cache
         self.MP = MP # Para ter acesso as funções da MP
 
+        self.estatisticasRead = {'hit' : 0, 'miss' : 0} # Dicionario de hits e miss do read
+        self.estatisticasWrite = {'hit' : 0, 'miss' : 0} # Dicionario de hits e miss do write
+
         for j in range( linhas_da_cache // linhas_conjunto ):
             lista = list()
             for i in range(linhas_conjunto):
@@ -172,20 +175,26 @@ class Cache:
         # Decodifica o codigo gerado na pesquisa
         index = self.decodificador(codigo)
         if index != -1: # Se o index for diferente de -1 então temos um indice de lista
+            
             # Verifica se o quadro é valido dentro da cache
             if self.cache[conjunto][index].valid:
                 self.atualizaLRU(conjunto,index) #Atualiza os contadores
+                self.estatisticasRead['hit'] += 1 # Atualiza o valor de hits
+                
                 return 'hit', numeroBloco, conjunto, index, deslocamento 
             # Se não for, então deve-se procurar na MP o endereço para pegar o valor atual da posição 
     
         # Verifica qual das duas linhas deve sair 
         indice_a_ser_substituido = 0
         maiorLRU = 0 
+        
         for index in range(len(self.cache[conjunto])):
+            
             # Verifica se a linha é valida, se não for então o quadro deve ser trocado
             if not self.cache[conjunto][index].valid:
                 indice_a_ser_substituido = index
                 break
+            
             # Verifica se ele deve ser substituido pela politica de substituição LRU
             if self.cache[conjunto][index].contadorLRU > maiorLRU:
                 maiorLRU = self.cache[conjunto][index].contadorLRU
@@ -194,6 +203,8 @@ class Cache:
         # Caso não esteja na cache ou o bit de validade for false, insere o quadro na cache
         self.inserirBloco(bloco, conjunto, rotulo, indice_a_ser_substituido)
         self.atualizaLRU(conjunto,index) # Atualiza os contadores
+        self.estatisticasRead['miss'] += 1 # Atualiza o valor de miss
+        
         return 'miss', numeroBloco, conjunto, index, deslocamento  
 
     def write(self):
