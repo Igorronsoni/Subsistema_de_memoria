@@ -122,7 +122,6 @@ class MP:
         # Altera o tipo da entrada para acessar a lista
         if "0b" in str(endereco):
             endereco = int(endereco,0)
-        
-        inicio,final = self.dimensoesDoBloco(self.blockNumber(endereco))
-        print(inicio,final)
-        return self.memory[inicio:final]
+        numeroBloco = self.blockNumber(endereco)
+        inicio,final = self.dimensoesDoBloco(numeroBloco)
+        return numeroBloco, self.memory[inicio:final].copy()
