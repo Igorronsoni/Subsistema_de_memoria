@@ -10,7 +10,7 @@
 # E-mail: giovanegsilva@outlook.com
 
 # -- Resumo -- #
-# O trabalho prático desenvolvido tem como objetivo implementar uma politica de mapeamento, substituição e escrita de um sistema de memória 
+# O trabalho prático desenvolvido tem como objetivo implementar uma politica de mapeamento, substituição e escrita de um subsistema de memória 
 
 # -- Instruções especifica do projeto -- #
 # Mapeamento: Associativo por Conjuntos (tamanho do conjunto especificado é 2)
@@ -18,27 +18,25 @@
 # Politica de substituição: LRU
 
 # -- Detalhes sobre os dados -- #
-# O tipo de dado escolhida para o armazenamento de dados será em binario
+# O tipo de dado escolhida para o armazenamento de dados será em hexadecimal e para os endereços usaremos binario
 
 # -- Importação de modulos necessarios -- #
 from MP import MP
+from cache import Cache
 
 # -- Variáveis para a implementação -- #
 # -- MP -- #
 celulas_MP = 128            # Número de células na MP: 128
 tamanho_bloco = 4           # Tamanho do bloco
+tamanho_celula = 8          # Tamanho da célula em bits
 # -- Cache -- #
 linhas_cache = 8            # Número de linhas da cache
-tamanho_celula = 8          # Tamanho da celular em bits
 tamanho_conjunto = 2        # Tamanho do conjunto
-
-# -- Variáveis de controle -- #
-continua = True             # Controle de loop, True => mantendo a aplicação rodando
 
 # --- Funções --- #
 # -- Função responsavel por imprimir o menu -- #
 def Menu():
-    print("+-------+----------------------------------+")
+    print("\n+-------+----------------------------------+")
     print("| Opcao |               Menu               |")
     print("+-------+----------------------------------+")
     print("|   1   |    Ler o valor de um endereço    |")
@@ -50,15 +48,21 @@ def Menu():
     print("|   4   |               Sair               |")
     print("+-------+----------------------------------+")
 
+# -- Variáveis de controle -- #
+continua = True             # Controle de loop, True => mantendo a aplicação rodando
+valor_maximo = '0b' + ('1' * tamanho_celula)
+
 # -- Inicia classes -- #
-main_memory = MP(celulas_MP,tamanho_bloco)
+main_memory = MP(celulas_MP, tamanho_bloco, valor_maximo)
+cache = Cache(main_memory, tamanho_bloco, valor_maximo, linhas_cache, tamanho_conjunto)
 
 while continua:
     # Impressão da MP
     main_memory.imprime()
+    cache.imprimir()
 
     # -- Menu de seleção de opção -- #
-    #Menu() # Chama a função para a impressão das opções
+    Menu() # Chama a função para a impressão das opções
     opcao = int(input("Opcao: "))
     
     # --- Opção 1 --- #

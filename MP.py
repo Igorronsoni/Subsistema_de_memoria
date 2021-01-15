@@ -3,7 +3,7 @@ import random
 # --- Classe necessaria para a implementação da memoria principal --- #
 class MP:
 
-    def __init__(self, quantidade_celulas, tamanho_bloco):
+    def __init__(self, quantidade_celulas, tamanho_bloco, valor_maximo):
         self.memory = list() # Inicia a lista da memoria pricipal
 
         self.tamanho_bloco = tamanho_bloco # Tamanho de cada bloco
@@ -11,7 +11,7 @@ class MP:
 
         # Gera valores aleatorios para inicialização da MP
         for x in range(quantidade_celulas):
-            value = random.randint(0,255)
+            value = random.randint(0,int(valor_maximo,0))
             self.memory.append(hex(value))
 
     # --- Funções secundarias --- #
@@ -87,7 +87,6 @@ class MP:
                 value = str(self.memory[address])
 
                 address = str(bin(address))
-                address = str(address)
                 
                 # Verifica os tamanhos para a impressão
                 if len(address) % 2 == 0:
@@ -125,4 +124,5 @@ class MP:
             endereco = int(endereco,0)
         
         inicio,final = self.dimensoesDoBloco(self.blockNumber(endereco))
+        print(inicio,final)
         return self.memory[inicio:final]
