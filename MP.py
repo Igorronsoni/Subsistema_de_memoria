@@ -115,6 +115,7 @@ class MP:
         
     # -- Escreve um bloco dentro da MP -- #
     def write(self, endereco, valor):
+        endereco = int(endereco,0)
         self.memory[endereco] = valor
 
     # -- Le um bloco da MP -- #

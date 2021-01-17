@@ -3,33 +3,27 @@ import random
 class Quadro:
 
     def __init__(self, tamanho_do_bloco, numero_maximo):
-        self.linha = list() # Lista onde os valores irão ficar
+        self.linha = [] # Lista onde os valores irão ficar
         self.valid = 0 # Bit de validade
         self.tag = bin(random.randint(0,7)) # Tag do endereço
         self.contadorLRU = 0 # Contador LRU
-
-        # Variaveis de estatisticas
-        self.hitWrite = 0
-        self.missWrite = 0
-        self.hitRead = 0
-        self.missRead = 0
 
         for f in range(tamanho_do_bloco):
             self.linha.append(hex(random.randint(0,int(str(numero_maximo),0))))
     
     # -- Responsavel pelo retorno dos valor -- #
     def read(self):
-        return [self.valid, self.tag, self.linha]
+        return [self.contadorLRU ,self.valid, self.tag, self.linha]
 
+    # -- Troca um bloco inteiro -- #
     def write(self,quadro):
         self.linha = quadro
 
-    # -- Responsavel pelo contador LRU -- #
-    def contador(self, used):
-        if used:
-            self.contadorLRU = 0
-        else:
-            self.contadorLRU += 1
+    # -- Altera um valor dentro de uma linha por indice -- #
+    def writeValue(self,index, value):
+        antigo = self.linha[index]
+        self.linha[index] = value
+        return antigo
 
 class Cache:
     
@@ -58,9 +52,12 @@ class Cache:
     def atualizaLRU(self, conjunto, index):
         for conj in range(len(self.cache)):
             for lista in range(len(self.cache[conj])):
-                if conj != conjunto and lista != index:
-                    self.cache[conj][lista].contadorLRU += 1
-
+                if self.cache[conj][lista].contadorLRU < 7:
+                    if conj != conjunto or lista != index:
+                        self.cache[conj][lista].contadorLRU += 1
+       
+        self.cache[conjunto][index].contadorLRU = 0
+    
     # -- Decodifica o valor gerado na hora da pesquisa -- #
     def decodificador(self,codigo):
         if codigo == '01':
@@ -73,12 +70,12 @@ class Cache:
     # --- Funções principais --- #
     # -- Imprime a memória cache dentro de linhas -- #
     def imprimir(self):
-        print('\n+---------------------------------------------------+')
-        print('|                    Memoria Cache                  |')
-        print('+---------------------------------------------------+')
-        print('| Block | Valid |  Tag  |          Values           |')
-        print('+---------------------------------------------------+')
-        
+        print('\n+-----------------------------------------------------------+')
+        print('|                       Memoria Cache                       |')
+        print('+-----------------------------------------------------------+')
+        print('| Block |  LRU  | Valid |  Tag  |           Values          |')
+        print('+-----------------------------------------------------------+')
+
         # Passa pelos conjuntos
         for conjunto in range(len(self.cache)):
             
@@ -94,19 +91,30 @@ class Cache:
             
             # Variavel de controle de quebra de linha
             rodadas = 1
-
+            
             # Passa pelas listas dos conjuntos
             for linha in self.cache[conjunto]:
-
+                
                 retorno_MP = linha.read() # Pega os dados de uma linha especifica
+                
+                # Imprime o contador
+                lru = str(bin(retorno_MP[0]))
+                # Verifica se o tamanho é par então deve-se somar mais um espaço
+                if len(lru) % 2 == 0:
+                    lru += ' '
+                
+                espaco = (7 - len(lru)) // 2
+                espaco = ' ' * espaco
+                lru = espaco + lru + espaco
+                print('{}|'.format(lru),end='')
                 
                 # Imprime o bit de validade
                 espaco = ' ' * 3 # O tamanho do bit é sempre 1 e o espaço é sempre 7 entao temos que 7 - 1 // 2
-                valid = espaco + str(retorno_MP[0]) + espaco
+                valid = espaco + str(retorno_MP[1]) + espaco
                 print('{}|'.format(valid),end='')
 
                 # Imprime tag da lista
-                tag = str(retorno_MP[1])
+                tag = str(retorno_MP[2])
                 # Verifica se o tamanho é par então deve-se somar mais um espaço
                 if len(tag) % 2 == 0:
                     tag += ' '
@@ -117,15 +125,15 @@ class Cache:
                 print('{}|'.format(tag),end='')
 
                 # Passa pelos valores das listas
-                for value in retorno_MP[2]:
+                for value in retorno_MP[3]:
                     # Realiza os calculos de soma de espaços
                     value = str(value)
-                    espaco = (7 - len(value)) // 2
+                    espaco = (6 - len(value)) // 2
                     espaco = ' ' * espaco
                     
-                    # Verifica se o tamanho é par então deve-se somar mais um espaço
+                    # Verifica se o tamanho é impar então deve-se somar mais um espaço
                     if len(value) % 2 != 0:
-                       value = value[:-1]
+                       value = value + ' '
 
                     value = espaco + value + espaco
 
@@ -134,9 +142,9 @@ class Cache:
                 # Somente imprime se for a primeira lista a ser printada
                 if rodadas == 1:
                     espaco_conjunto = ' ' * len(conjunto_bin)
-                    print('\n+       +-------+-------+---------------------------+\n|{}|'.format(espaco_conjunto),end='')
+                    print('\n+       +-------+-------+-------+---------------------------+\n|{}|'.format(espaco_conjunto),end='')
                 else:
-                    print('\n+-------+-------+-------+---------------------------+')
+                    print('\n+-------+-------+-------+-------+---------------------------+')
 
                 rodadas += 1
 
@@ -181,9 +189,9 @@ class Cache:
             if self.cache[conjunto][index].valid:
                 self.atualizaLRU(conjunto,index) #Atualiza os contadores
                 
-                lista = self.cache[conjunto][index].read()
-
-                return 'hit', numeroBloco, conjunto, index, deslocamento, lista[2][deslocamento]
+                lista = self.cache[conjunto][index].read() # Read do quadro da cache
+                
+                return 'hit', numeroBloco, conjunto, index, deslocamento, lista[3][deslocamento]
             # Se não for, então deve-se procurar na MP o endereço para pegar o valor atual da posição 
     
         # Verifica qual das duas linhas deve sair 
@@ -210,6 +218,7 @@ class Cache:
 
     def write(self, endereco, valor):
         copia_endereco = endereco
+        
         # Pega as partes do endereço
         if not '0b' in copia_endereco:
             # Caso for um decimal faz a transformação para binario
@@ -217,13 +226,25 @@ class Cache:
             
             # Verifica se o binario possui 7 bits
             if len(str(copia_endereco)) < 9:
-                valor = copia_endereco[2:]
-                zeros = '0' * (7 - len(valor))
-                copia_endereco = '0b' + zeros + valor
-
+                tmp = copia_endereco[2:]
+                zeros = '0' * (7 - len(tmp))
+                copia_endereco = '0b' + zeros + tmp
+        
+        # Transforma o valor em hexadecimal
+        valor = hex(int(valor,0))
+        
         rotulo = '0b' + str(int(str(copia_endereco)[2:5])) # Pega qual o rotulo 
         conjunto = int('0b' + str(copia_endereco)[5:7],0) # Pega o conjunto destinado
         deslocamento = int('0b' + str(copia_endereco)[7:],0) # Deslocamento dentro do quadro 
 
+        tupla = self.read(endereco)
 
-         
+        # Verifica se o endereço estava na cache, senão coloca ele e altera as estatisticas
+        if tupla[0] == 'hit':
+            self.estatisticasWrite['hit'] += 1 # Aumenta a quantidade de acertos
+        else:
+            self.estatisticasWrite['miss'] += 1 # Aumenta a quantidade de faltas
+
+        antigo_valor = self.cache[tupla[2]][tupla[3]].writeValue(tupla[4],valor)
+        self.MP.write(endereco,valor)
+        return tupla[0], tupla[1], tupla[2], tupla[3], tupla[4], valor, antigo_valor

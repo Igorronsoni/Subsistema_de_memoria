@@ -24,6 +24,9 @@
 from MP import MP
 from cache import Cache
 
+# -- Bibliotecas externas -- #
+from prettytable import PrettyTable
+
 # -- Variáveis para a implementação -- #
 # -- MP -- #
 celulas_MP = 128            # Número de células na MP: 128
@@ -52,7 +55,7 @@ def Menu():
     print("|   6   |               Sair               |")
     print("+-------+----------------------------------+")
 
-# -- Imprime a saida da leitura da cache -- #
+# -- Imprime a saida da leitura/escrita da cache -- #
 def saida(tupla):
     inCache  = 'Nao' if tupla[0] == 'miss' else 'Sim' # Salva o valor sim ou nao dependendo da saida miss ou hit
     
@@ -76,13 +79,66 @@ def saida(tupla):
     if len(valor) % 2 != 0:
         valor = ' ' + valor
     
-    print("\n+------------------------------------------------------------------------+")   
-    print("|                       Retorno da Leitura da Cache                      |")
-    print("+------------------------------------------------------------------------+")
-    print('| Estava na Cache | Bloco MP  | Conjunto | Quadro | Deslocamento | Valor |')
-    print('+-----------------+-----------+----------+--------+--------------+-------+')
-    print('|       {}       |  {}  |   {}   |  {}   |     {}     | {}  |'.format(inCache, blocoMP,conjunto, bin(tupla[3]),deslocamento,valor))
-    print('+-----------------+-----------+----------+--------+--------------+-------+')
+    if len(tupla) > 6:
+        antigo_valor = str(tupla[6])
+        if len(antigo_valor) % 2 != 0:
+            antigo_valor = ' ' + antigo_valor
+
+        print("\n+---------------------------------------------------------------------------------------+")   
+        print("|                                Retorno da Leitura da Cache                            |")
+        print("+---------------------------------------------------------------------------------------+")
+        print('| Estava na Cache | Bloco MP  | Conjunto | Quadro | Deslocamento | Valor Antigo | Valor |')
+        print('+-----------------+-----------+----------+--------+--------------+--------------+-------+')
+        print('|       {}       |  {}  |   {}   |  {}   |     {}     |     {}     | {}  |'.format(inCache, blocoMP,conjunto, bin(tupla[3]),deslocamento,antigo_valor, valor))
+        print('+-----------------+-----------+----------+--------+--------------+--------------+-------+')
+    
+    else: 
+        print("\n+------------------------------------------------------------------------+")   
+        print("|                       Retorno da Leitura da Cache                      |")
+        print("+------------------------------------------------------------------------+")
+        print('| Estava na Cache | Bloco MP  | Conjunto | Quadro | Deslocamento | Valor |')
+        print('+-----------------+-----------+----------+--------+--------------+-------+')
+        print('|       {}       |  {}  |   {}   |  {}   |     {}     | {}  |'.format(inCache, blocoMP,conjunto, bin(tupla[3]),deslocamento,valor))
+        print('+-----------------+-----------+----------+--------+--------------+-------+')
+
+# -- Função de estatisticas -- #
+def estatisticas(cache):
+
+    # Pega o valor cheio para a geração das porcentagens
+    totalRead = cache.estatisticasRead['hit'] + cache.estatisticasRead['miss']
+    totalWrite = cache.estatisticasWrite['hit'] + cache.estatisticasWrite['miss']
+
+    # Edita os espaços hit escrita
+    hit_escrita = cache.estatisticasWrite['hit']
+    hit_escrita_porcentagem = 100 * (cache.estatisticasWrite['hit'] / totalWrite) if totalWrite != 0 else '0' 
+
+    # Edita os espaços hit leitura
+    hit_leitura = cache.estatisticasRead['hit']
+    hit_leitura_porcentagem = 100 * (cache.estatisticasRead['hit'] / totalRead) if totalRead != 0 else '0' 
+    
+    # Edita os espaços miss escrita
+    miss_escrita = cache.estatisticasWrite['miss']
+    miss_escrita_porcentagem = 100 * (cache.estatisticasWrite['miss'] / totalWrite) if totalWrite != 0 else '0' 
+
+    # Edita os espaços miss leitura
+    miss_leitura = cache.estatisticasRead['miss']
+    miss_leitura_porcentagem = 100 * (cache.estatisticasRead['miss'] / totalRead) if totalRead != 0 else '0' 
+
+    # Altera os valores de geral
+    geral_hit = cache.estatisticasWrite['hit'] + cache.estatisticasRead['hit']
+    geral_miss = cache.estatisticasWrite['miss'] + cache.estatisticasRead['miss']
+
+    geral_hit_porcentagem = 100 * (geral_hit / (totalWrite + totalRead)) if (totalWrite + totalRead) != 0 else 0
+    geral_miss_porcentagem = 100 * (geral_miss / (totalWrite + totalRead)) if (totalWrite + totalRead) != 0 else 0
+    
+    print()
+    pt_estatistica = PrettyTable(['', 'Hit (abs)', 'Miss (abs)', 'Hit (%)', 'Miss (%)'])
+    pt_estatistica.title = 'Estatisticas'
+    pt_estatistica.add_row(['Leitura',hit_leitura, miss_leitura, hit_leitura_porcentagem, miss_leitura_porcentagem])
+    pt_estatistica.add_row(['Escrita',hit_escrita,miss_escrita,hit_escrita_porcentagem,miss_escrita_porcentagem])
+    pt_estatistica.add_row(['Geral',geral_hit,geral_miss,geral_hit_porcentagem,geral_miss_porcentagem])
+    print(pt_estatistica)
+    
 
 # -- Variáveis de controle -- #
 continua = True             # Controle de loop, True => mantendo a aplicação rodando
@@ -122,12 +178,12 @@ while continua:
         print("\nOBS: O valor pode ser escrito em hexadecimal ou decimal.\nCaso opte por hexadecimal, e necessario adicionar '0x' a frente do valor")
         valor =  input("Digite um valor entre 0 e 255 (0x00 - 0xFF): ")
         
-        cache.write(endereco,valor)
+        saida(cache.write(endereco,valor))
     
     # -- Opção 3 -- #
     # -- Apresenta as estatísticas de acertos e faltas (absolutos e percentuais) para as três situações: leitura, escrita e geral -- #
     elif opcao == 3:
-        break
+        estatisticas(cache)
 
     # -- Opção 4 -- #
     # -- Imprime Cache -- #
